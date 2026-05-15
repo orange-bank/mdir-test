@@ -1,0 +1,12 @@
+apiVersion: v2
+name: orange-bank
+description: Orange Bank microfrontend Next.js application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - nextjs
+  - microfrontend
+  - orange-bank
+maintainers:
+  - name: Orange Bank Engineering
