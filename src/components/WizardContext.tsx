@@ -20,6 +20,20 @@ interface WizardContextValue {
   prevStep: () => void;
   isLastStep: boolean;
   isFirstStep: boolean;
+
+  // Property & loan state
+  propertyPrice: string;
+  setPropertyPrice: (value: string) => void;
+  depositAmount: string;
+  setDepositAmount: (value: string) => void;
+  loanTerm: string;
+  setLoanTerm: (value: string) => void;
+
+  // Validation
+  validateStep1: () => { valid: boolean; errors: Record<string, string> };
+
+  // Reset / cancel
+  resetForm: () => void;
 }
 
 const WizardContext = createContext<WizardContextValue | null>(null);
@@ -37,11 +51,22 @@ export function WizardProvider({
 }: WizardProviderProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [applicantMode, setApplicantMode] = useState<ApplicantMode>(initialMode);
+  const [propertyPrice, setPropertyPrice] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [loanTerm, setLoanTerm] = useState("");
 
   const stepLabels = initialSteps.map((step) => step.label);
   const totalSteps = initialSteps.length;
   const isLastStep = currentStep >= totalSteps - 1;
   const isFirstStep = currentStep === 0;
+
+  const resetForm = useCallback(() => {
+    setCurrentStep(0);
+    setApplicantMode("single");
+    setPropertyPrice("");
+    setDepositAmount("");
+    setLoanTerm("");
+  }, []);
 
   const goToStep = useCallback((stepIndex: number) => {
     const clamped = Math.max(0, Math.min(stepIndex, totalSteps - 1));
@@ -55,6 +80,33 @@ export function WizardProvider({
   const prevStep = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   }, []);
+
+  const validateStep1 = useCallback(() => {
+    const errors: Record<string, string> = {};
+
+    if (!propertyPrice || Number(propertyPrice) <= 0) {
+      errors.propertyPrice = "Please enter a valid property price";
+    } else if (Number(propertyPrice) < 10000) {
+      errors.propertyPrice = "Property price must be at least £10,000";
+    }
+
+    if (!depositAmount || Number(depositAmount) <= 0) {
+      errors.depositAmount = "Please enter a valid deposit amount";
+    } else if (propertyPrice) {
+      const minDeposit = Math.round(Number(propertyPrice) * 0.05);
+      if (Number(depositAmount) < minDeposit) {
+        errors.depositAmount = `Minimum deposit is £${minDeposit.toLocaleString()} (5% of property price)`;
+      }
+    }
+
+    if (!loanTerm || Number(loanTerm) <= 0) {
+      errors.loanTerm = "Please enter a loan term";
+    } else if (Number(loanTerm) > 40) {
+      errors.loanTerm = "Max 40 years";
+    }
+
+    return { valid: Object.keys(errors).length === 0, errors };
+  }, [propertyPrice, depositAmount, loanTerm]);
 
   return (
     <WizardContext.Provider
@@ -70,6 +122,14 @@ export function WizardProvider({
         prevStep,
         isLastStep,
         isFirstStep,
+        propertyPrice,
+        setPropertyPrice,
+        depositAmount,
+        setDepositAmount,
+        loanTerm,
+        setLoanTerm,
+        validateStep1,
+        resetForm,
       }}
     >
       {children}
