@@ -25,4 +25,7 @@ export {
   useWizard,
   type ApplicantMode,
   type WizardStep,
+  type StepPersonalDetails,
+  type StepFinancialInfo,
+  type StepFinancialInfoDebtEntry,
 } from "./WizardContext";

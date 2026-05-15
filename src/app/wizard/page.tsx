@@ -11,7 +11,7 @@ import {
 } from "@/components";
 import { StepApplicationType } from "@/components/wizard/steps/StepApplicationType";
 import { StepPersonalDetails } from "@/components/wizard/steps/StepPersonalDetails";
-import { StepFinancialInfo } from "@/components/wizard/steps/StepFinancialInfo";
+import StepFinancialInfo from "@/components/wizard/steps/StepFinancialInfo";
 
 const stepLabels: string[] = ["Application Type", "Personal Details", "Financial Information"];
 
@@ -37,12 +37,24 @@ function WizardContent() {
     loanTerm,
     setLoanTerm,
     validateStep1,
+    validateStep2,
+    validateStep3,
+    personalDetails,
+    financialInfo,
+    updatePersonalDetails,
+    updateFinancialInfo,
     prevStep,
     resetForm,
   } = useWizard();
 
   const step1Validation = currentStep === 1 ? validateStep1() : { valid: true, errors: {} };
   const isStep1Disabled = currentStep === 1 && !step1Validation.valid;
+
+  const step2Validation = currentStep === 2 ? validateStep2() : { valid: true, errors: {} };
+  const isStep2Disabled = currentStep === 2 && !step2Validation.valid;
+
+  const step3Validation = currentStep === 3 ? validateStep3() : { valid: true, errors: {} };
+  const isStep3Disabled = currentStep === 3 && !step3Validation.valid;
 
   const renderStep = useCallback(() => {
     switch (currentStep) {
@@ -63,9 +75,22 @@ function WizardContent() {
           />
         );
       case 2:
-        return <StepPersonalDetails mode={applicantMode} />;
+        return (
+          <StepPersonalDetails
+            values={personalDetails}
+            errors={step2Validation.errors}
+            onChange={updatePersonalDetails}
+            applicantMode={applicantMode}
+          />
+        );
       case 3:
-        return <StepFinancialInfo mode={applicantMode} />;
+        return (
+          <StepFinancialInfo
+            values={financialInfo}
+            errors={step3Validation.errors}
+            onChange={updateFinancialInfo}
+          />
+        );
       default:
         return null;
     }
