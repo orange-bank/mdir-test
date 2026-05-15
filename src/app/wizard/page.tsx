@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import {
   WizardProvider,
   useWizard,
@@ -13,11 +13,36 @@ import { StepApplicationType } from "@/components/wizard/steps/StepApplicationTy
 import { StepPersonalDetails } from "@/components/wizard/steps/StepPersonalDetails";
 import { StepFinancialInfo } from "@/components/wizard/steps/StepFinancialInfo";
 
-const stepLabels = ["Application Type", "Personal Details", "Financial Information"];
+const stepLabels: string[] = ["Application Type", "Personal Details", "Financial Information"];
+
+const initialSteps: WizardStep[] = stepLabels.map((label) => ({
+  id: `step-${label.toLowerCase().replace(/ /g, "-")}`,
+  label,
+  component: () => null,
+}));
 
 function WizardContent() {
-  const { currentStep, totalSteps, applicantMode, setApplicantMode, nextStep, isLastStep, isFirstStep } =
-    useWizard();
+  const {
+    currentStep,
+    totalSteps,
+    applicantMode,
+    setApplicantMode,
+    nextStep,
+    isLastStep,
+    isFirstStep,
+    propertyPrice,
+    setPropertyPrice,
+    depositAmount,
+    setDepositAmount,
+    loanTerm,
+    setLoanTerm,
+    validateStep1,
+    prevStep,
+    resetForm,
+  } = useWizard();
+
+  const step1Validation = currentStep === 1 ? validateStep1() : { valid: true, errors: {} };
+  const isStep1Disabled = currentStep === 1 && !step1Validation.valid;
 
   const renderStep = useCallback(() => {
     switch (currentStep) {
@@ -26,6 +51,15 @@ function WizardContent() {
           <StepApplicationType
             mode={applicantMode}
             onChange={(mode) => setApplicantMode(mode)}
+            propertyPrice={propertyPrice}
+            onPropertyPriceChange={setPropertyPrice}
+            propertyPriceError={step1Validation.errors.propertyPrice ?? ""}
+            depositAmount={depositAmount}
+            onDepositAmountChange={setDepositAmount}
+            depositAmountError={step1Validation.errors.depositAmount ?? ""}
+            loanTerm={loanTerm}
+            onLoanTermChange={setLoanTerm}
+            loanTermError={step1Validation.errors.loanTerm ?? ""}
           />
         );
       case 2:
@@ -35,7 +69,9 @@ function WizardContent() {
       default:
         return null;
     }
-  }, [currentStep, applicantMode, nextStep, isLastStep, isFirstStep, setApplicantMode]);
+  }, [currentStep, applicantMode, propertyPrice, depositAmount, loanTerm,
+    setApplicantMode, setPropertyPrice, setDepositAmount, setLoanTerm,
+    step1Validation]);
 
   return (
     <WizardContainer
@@ -50,26 +86,17 @@ function WizardContent() {
         currentStep={currentStep}
         totalSteps={totalSteps}
         onNext={nextStep}
-        onBack={() => window.alert("Back not implemented yet")}
-        onCancel={() => window.alert("Cancelled")}
+        onBack={prevStep}
+        onCancel={resetForm}
         nextLabel="Next"
         isLastStep={isLastStep}
         isFirstStep={isFirstStep}
+        onNextDisabled={isStep1Disabled || isLastStep}
+        isSubmitting={isStep1Disabled}
       />
     </WizardContainer>
   );
 }
-
-const initialSteps: WizardStep[] = stepLabels.map((label, idx) => ({
-  id: `step-${label.toLowerCase().replace(/ /g, "-")}`,
-  label,
-  component: () => {
-    const { applicantMode } = useWizard();
-    if (idx === 0) return <StepApplicationType mode={applicantMode} onChange={() => {}} />;
-    if (idx === 1) return <StepPersonalDetails mode={applicantMode} />;
-    return <StepFinancialInfo mode={applicantMode} />;
-  },
-}));
 
 export default function WizardPage() {
   return (
